@@ -1,0 +1,125 @@
+# Digestion Lab
+
+**Version 0.1.0**
+
+Feed a wireframe body and predict what happens next: **BURP**, **FART**, or **SMOOTH RIDE**.
+Written in Python with [pygame-ce](https://pyga.me/). Everything is drawn and synthesized in code:
+no image, font or audio files. English and Japanese.
+
+## Download / install
+
+| Platform | File | How |
+|---|---|---|
+| Windows 10/11 (64-bit) | `DigestionLab-v0.1.0.exe` | Single self-contained file. Double-click to play. |
+| Debian 12+ / Ubuntu 23.04+ (amd64) | `digestion-lab_0.1.0_amd64.deb` | `sudo apt install ./digestion-lab_0.1.0_amd64.deb`, then launch **Digestion Lab** from the app menu or run `digestion-lab`. |
+
+**Checking the version**: it's shown in the window title and on the title and settings screens.
+`digestion-lab --version` prints it on Linux, `dpkg -s digestion-lab` shows the package version,
+and on Windows it's under the .exe's **Properties → Details**.
+
+Japanese text uses fonts already installed on the system (Yu Gothic / Meiryo on Windows;
+Noto Sans CJK or similar on Linux, which the .deb recommends).
+
+## How to play
+
+1. Pick a mode and difficulty on the title screen.
+2. Choose a food from the menu card. Color-coded particles travel down the esophagus.
+3. Before they arrive, predict **[BURP]**, **[FART]** or **[SMOOTH]**. A correct call is worth +100.
+
+| Food type | Path | Result |
+|---|---|---|
+| Carbonated (soda, sparkling water, ramune, kombucha) | Stomach fills with expanding bubbles | Cheek puff, then **BURP!** 2 s after arrival |
+| Fermentable (beans, broccoli, sweet potato, cabbage, onions) | Skips the stomach via the express lane into the lower intestine | Gas builds, then a screen-shaking **FART!** 4 s after arrival |
+| Gentle (white rice, bananas, toast, okayu, udon) | Dissolves cleanly in the stomach | **SMOOTH RIDE!** |
+
+### Sounds
+
+Every gassy food has its own synthesized noise, generated in code at startup:
+
+| Food | Sound |
+|---|---|
+| Carbonated Soda | Big classic burp |
+| Sparkling Water | Short, crisp burp |
+| Ramune | Squeaky double burp |
+| Kombucha | Long, deep, gurgly burp |
+| Beans | Classic rippling fart |
+| Broccoli | High-pitched squeaker |
+| Sweet Potato | Long brassy trumpet |
+| Cabbage | Wet sputtering bursts |
+| Onions | Quiet, long hiss ("silent but deadly") |
+
+Gentle foods make no gas, so they play a soft chime instead. Fizzing, gut rumbles, gulps and UI
+sounds are synthesized too.
+
+**Modes**: **Classic** (8 rounds, max 800) · **Rush** (60 seconds, speed ramps up, streak bonuses
+up to +200) · **Endless** (3 lives, a wrong or late call costs one). On Rush and Endless the burp and
+fart timeouts shorten as the game speeds up.
+
+**Difficulty**: Easy (slower) · Normal · Hard (faster, particles stay gray until they arrive).
+
+Also: a Food Log of facts for every food you've tasted, 10 achievements, and settings for
+language, volume, screen shake and fullscreen. Progress is saved to
+`%APPDATA%\DigestionLab\save.json` (Windows) or `~/.local/share/digestion-lab/save.json` (Linux).
+
+**Controls**: mouse, or `1`–`6` pick food · `B` / `F` / `S` predict · `Esc` pause · `M` mute ·
+`F11` fullscreen.
+
+## Run from source
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python -m digestion_lab
+.venv/bin/python -m unittest discover -s tests   # rules, achievements and simulation timing
+```
+
+## Build the binaries
+
+```bash
+.venv/bin/pip install -r requirements-build.txt
+bash packaging/build_linux.sh           # -> dist/digestion-lab_<version>_amd64.deb
+bash packaging/build_windows_wine.sh    # -> dist/windows/DigestionLab-v<version>.exe (from Linux, via Wine)
+```
+
+On Windows you can instead run `packaging\build_windows.bat` with Python 3.10+ installed.
+
+The version comes from one place: `__version__` in `digestion_lab/__init__.py`. The build scripts
+read it for the .deb version, the .exe file name, and the Windows version resource
+(`packaging/make_version_file.py`). To release a new version, change it there and rebuild.
+
+The Wine build downloads the official Python for Windows installer from python.org into a private
+Wine prefix under `.build/` on first run (about 400 MB). The Linux binary runs on systems with
+glibc 2.36 or newer (the version it was built on); build on an older distro for wider support.
+
+## Project layout
+
+```
+digestion_lab/
+  app.py           window, main loop, input, game flow
+  rules.py         pure game rules: modes, scoring, streaks, speed (unit-tested)
+  achievements.py  achievement definitions and checks
+  foods.py         foods, categories, line icons, EN/JA names and facts
+  sim.py           digestion simulation: particles, bubbles, gas, bursts
+  geometry.py      body and digestive-tract paths
+  render.py        draws the body and simulation
+  ui.py            header, menu card, prediction panel, overlay screens
+  i18n.py          English / Japanese strings
+  fonts.py         system font lookup, mixed Japanese/Latin rendering
+  audio.py         synthesized sound effects, including a burp/fart voice per food
+  storage.py       save file
+  icon.py          app icon drawn in code
+packaging/         PyInstaller + .deb build scripts, Windows version resource, .desktop entry
+tests/             unittest suite
+```
+
+## Changelog
+
+### v0.1.0
+- First release: Windows .exe and Debian/Ubuntu .deb.
+- Classic, Rush and Endless modes; Easy, Normal and Hard difficulty.
+- 14 foods with per-food burp and fart sounds, a Food Log and 10 achievements.
+- English and Japanese.
+
+## License
+
+GPL-3.0. See [LICENSE](LICENSE).

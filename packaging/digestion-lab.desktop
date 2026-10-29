@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Digestion Lab
+Name[ja]=消化ラボ
+Comment=Feed the body. Predict the outcome.
+Comment[ja]=食べさせて、結果を予想しよう。
+Exec=digestion-lab
+Icon=digestion-lab
+Terminal=false
+Categories=Game;Education;

@@ -1,6 +1,6 @@
 # Digestion Lab
 
-**Version 0.1.0**
+**Version 0.1.1**
 
 Feed a wireframe body and predict what happens next: **BURP**, **FART**, or **SMOOTH RIDE**.
 Written in Python with [pygame-ce](https://pyga.me/). Everything is drawn and synthesized in code:
@@ -10,8 +10,8 @@ no image, font or audio files. English and Japanese.
 
 | Platform | File | How |
 |---|---|---|
-| Windows 10/11 (64-bit) | `DigestionLab-v0.1.0.exe` | Single self-contained file. Double-click to play. |
-| Debian 12+ / Ubuntu 23.04+ (amd64) | `digestion-lab_0.1.0_amd64.deb` | `sudo apt install ./digestion-lab_0.1.0_amd64.deb`, then launch **Digestion Lab** from the app menu or run `digestion-lab`. |
+| Windows 10/11 (64-bit) | `DigestionLab-v0.1.1.exe` | Single self-contained file. Double-click to play. |
+| Debian 12+ / Ubuntu 23.04+ (amd64) | `digestion-lab_0.1.1_amd64.deb` | `sudo apt install ./digestion-lab_0.1.1_amd64.deb`, then launch **Digestion Lab** from the app menu or run `digestion-lab`. |
 
 **Checking the version**: it's shown in the window title and on the title and settings screens.
 `digestion-lab --version` prints it on Linux, `dpkg -s digestion-lab` shows the package version,
@@ -34,7 +34,9 @@ Noto Sans CJK or similar on Linux, which the .deb recommends).
 
 ### Sounds
 
-Every gassy food has its own synthesized noise, generated in code at startup:
+Every gassy food has its own noise, generated in code at startup from a physical model of how the
+sound is really made: irregular puffs of air (not a steady tone), shaped by the throat and mouth
+for burps or by body resonances for farts, with breathy turbulence on each puff.
 
 | Food | Sound |
 |---|---|
@@ -82,10 +84,15 @@ bash packaging/build_windows_wine.sh    # -> dist/windows/DigestionLab-v<version
 ```
 
 On Windows you can instead run `packaging\build_windows.bat` with Python 3.10+ installed.
+Builds of earlier versions are kept in `dist/` next to the new ones.
 
 The version comes from one place: `__version__` in `digestion_lab/__init__.py`. The build scripts
 read it for the .deb version, the .exe file name, and the Windows version resource
-(`packaging/make_version_file.py`). To release a new version, change it there and rebuild.
+(`packaging/make_version_file.py`).
+
+**Release checklist** (every change): bump the patch version in `digestion_lab/__init__.py`, run the
+tests, build both the .deb and the .exe, and update this README's changelog and
+[BUGS.md](BUGS.md).
 
 The Wine build downloads the official Python for Windows installer from python.org into a private
 Wine prefix under `.build/` on first run (about 400 MB). The Linux binary runs on systems with
@@ -110,9 +117,18 @@ digestion_lab/
   icon.py          app icon drawn in code
 packaging/         PyInstaller + .deb build scripts, Windows version resource, .desktop entry
 tests/             unittest suite
+BUGS.md            fixed bugs and known issues, by version
 ```
 
 ## Changelog
+
+See [BUGS.md](BUGS.md) for fixed bugs and known issues.
+
+### v0.1.1
+- Realistic burp and fart sounds: rebuilt as physical models (irregular air puffs through throat,
+  mouth and body resonances) instead of buzzy tones. Each food still has its own voice.
+- Fixed a filter bug that made every burp and fart a low hum.
+- Older builds are no longer deleted when a new .exe is built.
 
 ### v0.1.0
 - First release: Windows .exe and Debian/Ubuntu .deb.

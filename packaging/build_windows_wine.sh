@@ -27,7 +27,6 @@ fi
 VERSION="$("$ROOT_DIR/.venv/bin/python" -c 'import digestion_lab; print(digestion_lab.__version__)')"
 "$ROOT_DIR/.venv/bin/python" packaging/make_icons.py
 "$ROOT_DIR/.venv/bin/python" packaging/make_version_file.py
-rm -f "$ROOT_DIR"/dist/windows/DigestionLab*.exe
 run wine "$WINPY" -m PyInstaller --noconfirm --clean --onefile --windowed --name "DigestionLab-v$VERSION" \
   --version-file "$(winepath -w "$ROOT_DIR/.build/version_info.txt")" \
   --icon "$(winepath -w "$ROOT_DIR/.build/icons/icon.ico")" --paths "$(winepath -w "$ROOT_DIR")" \

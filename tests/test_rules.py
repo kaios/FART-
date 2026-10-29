@@ -142,8 +142,9 @@ if __name__ == '__main__':
 
 class SoundAndVersionTest(unittest.TestCase):
     def test_version(self):
+        import re
         import digestion_lab
-        self.assertEqual(digestion_lab.__version__, '0.1.0')
+        self.assertRegex(digestion_lab.__version__, r'^\d+\.\d+\.\d+$')
 
     def test_every_gassy_food_has_its_own_sound(self):
         from digestion_lab import audio

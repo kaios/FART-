@@ -1,17 +1,18 @@
 # Digestion Lab
 
-**Version 0.1.1**
+**Version 0.1.2**
 
 Feed a wireframe body and predict what happens next: **BURP**, **FART**, or **SMOOTH RIDE**.
-Written in Python with [pygame-ce](https://pyga.me/). Everything is drawn and synthesized in code:
-no image, font or audio files. English and Japanese.
+Written in Python with [pygame-ce](https://pyga.me/). Graphics are drawn in code (no image or font
+files). Burps and farts are real recordings (public-domain CC0); other sounds are synthesized.
+English and Japanese.
 
 ## Download / install
 
 | Platform | File | How |
 |---|---|---|
-| Windows 10/11 (64-bit) | `DigestionLab-v0.1.1.exe` | Single self-contained file. Double-click to play. |
-| Debian 12+ / Ubuntu 23.04+ (amd64) | `digestion-lab_0.1.1_amd64.deb` | `sudo apt install ./digestion-lab_0.1.1_amd64.deb`, then launch **Digestion Lab** from the app menu or run `digestion-lab`. |
+| Windows 10/11 (64-bit) | `DigestionLab-v0.1.2.exe` | Single self-contained file. Double-click to play. |
+| Debian 12+ / Ubuntu 23.04+ (amd64) | `digestion-lab_0.1.2_amd64.deb` | `sudo apt install ./digestion-lab_0.1.2_amd64.deb`, then launch **Digestion Lab** from the app menu or run `digestion-lab`. |
 
 **Checking the version**: it's shown in the window title and on the title and settings screens.
 `digestion-lab --version` prints it on Linux, `dpkg -s digestion-lab` shows the package version,
@@ -34,24 +35,24 @@ Noto Sans CJK or similar on Linux, which the .deb recommends).
 
 ### Sounds
 
-Every gassy food has its own noise, generated in code at startup from a physical model of how the
-sound is really made: irregular puffs of air (not a steady tone), shaped by the throat and mouth
-for burps or by body resonances for farts, with breathy turbulence on each puff.
+Every gassy food has its own **real recorded** burp or fart: public-domain (CC0) clips from
+[Freesound](https://freesound.org), trimmed and level-matched. Recordists are credited in
+[digestion_lab/sounds/CREDITS.md](digestion_lab/sounds/CREDITS.md).
 
 | Food | Sound |
 |---|---|
-| Carbonated Soda | Big classic burp |
+| Carbonated Soda | Big, long, loud belch |
 | Sparkling Water | Short, crisp burp |
-| Ramune | Squeaky double burp |
-| Kombucha | Long, deep, gurgly burp |
-| Beans | Classic rippling fart |
-| Broccoli | High-pitched squeaker |
-| Sweet Potato | Long brassy trumpet |
-| Cabbage | Wet sputtering bursts |
-| Onions | Quiet, long hiss ("silent but deadly") |
+| Ramune | Double burp (two quick belches) |
+| Kombucha | Long, deep belch |
+| Beans | Classic blast with a rippling tail |
+| Broccoli | Short, tight squeaker |
+| Sweet Potato | Two-part rattler |
+| Cabbage | Long, wet and sputtery |
+| Onions | Quiet, airy "silent but deadly" |
 
 Gentle foods make no gas, so they play a soft chime instead. Fizzing, gut rumbles, gulps and UI
-sounds are synthesized too.
+sounds are synthesized in code.
 
 **Modes**: **Classic** (8 rounds, max 800) · **Rush** (60 seconds, speed ramps up, streak bonuses
 up to +200) · **Endless** (3 lives, a wrong or late call costs one). On Rush and Endless the burp and
@@ -112,7 +113,8 @@ digestion_lab/
   ui.py            header, menu card, prediction panel, overlay screens
   i18n.py          English / Japanese strings
   fonts.py         system font lookup, mixed Japanese/Latin rendering
-  audio.py         synthesized sound effects, including a burp/fart voice per food
+  audio.py         loads the recorded burps/farts, synthesizes the other effects
+  sounds/          recorded CC0 burp and fart clips (WAV) + CREDITS.md
   storage.py       save file
   icon.py          app icon drawn in code
 packaging/         PyInstaller + .deb build scripts, Windows version resource, .desktop entry
@@ -123,6 +125,11 @@ BUGS.md            fixed bugs and known issues, by version
 ## Changelog
 
 See [BUGS.md](BUGS.md) for fixed bugs and known issues.
+
+### v0.1.2
+- Burps and farts are now **real recordings** (public-domain CC0 clips from Freesound), one per
+  food, replacing the synthesized versions that still sounded electronic.
+- Recordings are bundled inside the .exe and .deb; credits in `digestion_lab/sounds/CREDITS.md`.
 
 ### v0.1.1
 - Realistic burp and fart sounds: rebuilt as physical models (irregular air puffs through throat,

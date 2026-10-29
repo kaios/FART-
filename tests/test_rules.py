@@ -146,25 +146,23 @@ class SoundAndVersionTest(unittest.TestCase):
         import digestion_lab
         self.assertRegex(digestion_lab.__version__, r'^\d+\.\d+\.\d+$')
 
-    def test_every_gassy_food_has_its_own_sound(self):
+    def test_every_gassy_food_has_a_recording(self):
+        import wave
         from digestion_lab import audio
+        names = set(audio.recorded_names())
         for f in FOODS:
             name = audio.food_sound(f)
             if f.cat == 'smooth':
                 self.assertIsNone(name)
-            else:
-                specs = audio.BURPS if f.cat == 'burp' else audio.FARTS
-                self.assertIn(f.id, specs, f'{f.id} has no {f.cat} sound')
+                continue
+            self.assertIn(name, names, f'{f.id} has no recording')
+            with wave.open(str(audio.sounds_dir() / f'{name}.wav')) as w:
+                secs = w.getnframes() / w.getframerate()
+                self.assertTrue(0.3 < secs < 2.6, f'{name} is {secs:.2f}s')
+                self.assertGreater(max(w.readframes(w.getnframes())), 0)
 
-    def test_food_sounds_differ(self):
+    def test_recordings_are_credited(self):
         from digestion_lab import audio
-        lengths = {}
-        for k, v in audio.BURPS.items():
-            s = audio._burp(**v)
-            self.assertGreater(max(abs(x) for x in s), 0.05, k)
-            lengths[f'burp_{k}'] = len(s)
-        for k, v in audio.FARTS.items():
-            s = audio._fart(**v)
-            self.assertGreater(max(abs(x) for x in s), 0.05, k)
-            lengths[f'fart_{k}'] = len(s)
-        self.assertEqual(len(set(lengths.values())), len(lengths), 'each food sound should have its own length')
+        credits = (audio.sounds_dir() / 'CREDITS.md').read_text(encoding='utf-8')
+        for name in audio.recorded_names():
+            self.assertIn(f'{name}.wav', credits)

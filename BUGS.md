@@ -10,10 +10,15 @@ Every release updates this file along with the README changelog.
 | K1 | The Linux binary needs glibc 2.36 or newer (Debian 12, Ubuntu 23.04+). It won't start on older distros. | Build on the oldest distro you want to support. |
 | K2 | Japanese text on Linux needs an installed CJK font; without one, Japanese characters don't display. | `sudo apt install fonts-noto-cjk` (the .deb recommends it). Windows already has fonts. |
 | K3 | On Windows, `DigestionLab-v*.exe --version` prints nothing, because the game has no console window. | Check **Properties → Details** or the title screen. |
-| K4 | Sounds are synthesized, not recorded. They were checked by spectrogram, not yet by ear on real speakers. | Please report any food whose sound is off. Recorded clips are possible but would break the "no external assets" rule. |
+| K4 | The recorded burps and farts were chosen and checked by spectrogram, not yet by ear on real speakers. | Please report any clip that sounds wrong; it's easy to swap in a different CC0 recording. |
 | K5 | The .exe has been tested under Wine, not yet on a real Windows PC. | Please report any Windows-only problem. |
 
 ## Fixed
+
+### v0.1.2
+| # | Bug | Fix |
+|---|---|---|
+| F9 | Burps and farts still sounded electronic, even with the physical-model synthesis. | Replaced with real recordings (CC0, Freesound), one per food, bundled in the binaries. |
 
 ### v0.1.1
 | # | Bug | Fix |

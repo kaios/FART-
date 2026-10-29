@@ -7,6 +7,6 @@ for /f %%v in ('.venv-win\Scripts\python -c "import digestion_lab; print(digesti
 .venv-win\Scripts\python packaging\make_icons.py || exit /b 1
 .venv-win\Scripts\python packaging\make_version_file.py || exit /b 1
 .venv-win\Scripts\python -m PyInstaller --noconfirm --clean --onefile --windowed --name DigestionLab-v%VERSION% ^
-  --version-file .build\version_info.txt --icon .build\icons\icon.ico --paths . --distpath dist\windows --workpath .build\pyi-win --specpath .build ^
+  --version-file .build\version_info.txt --add-data "digestion_lab\sounds;digestion_lab\sounds" --icon .build\icons\icon.ico --paths . --distpath dist\windows --workpath .build\pyi-win --specpath .build ^
   packaging\run.py || exit /b 1
 echo Built dist\windows\DigestionLab-v%VERSION%.exe

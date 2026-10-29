@@ -127,11 +127,12 @@ class Sim:
             self._shake(14, 0.9)
         else:
             self._burst('smoothFx', 300, 270, 'smooth', 46, -0.04, 1.8)
-            for _ in range(18):
+            for i in range(18):
                 a = random.random() * math.tau
                 sp = 40 + random.random() * 80
                 self.puffs.append({'x': STOM_CX, 'y': STOM_CY, 'vx': math.cos(a) * sp, 'vy': math.sin(a) * sp,
-                                   'r': 2, 'gr': 0, 'life': 1.0, 'max': 1.0, 'cat': 'smooth', 'kind': 'star'})
+                                   'r': 2, 'gr': 0, 'life': 1.0, 'max': 1.0, 'cat': 'smooth',
+                                   'kind': 'heart' if i % 3 == 0 else 'star'})
 
     def update(self, dt):
         ev = []

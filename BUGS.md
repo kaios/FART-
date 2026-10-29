@@ -16,6 +16,11 @@ Every release updates this file along with the README changelog.
 
 ## Fixed
 
+### v0.1.4
+| # | Bug | Fix |
+|---|---|---|
+| F13 | The body looked like a medical diagram, not a game character, and the animations were stiff (only particles moved). | Cartoon buddy with thick outlines, big eyes and expressions; squash-and-stretch, hops, bounces, wobbly stomach, gulps, puffy clouds and bouncing comic text. |
+
 ### v0.1.3
 | # | Bug | Fix |
 |---|---|---|

@@ -1,8 +1,8 @@
 # Digestion Lab
 
-**Version 0.1.3**
+**Version 0.1.4**
 
-Feed a wireframe body and predict what happens next: **BURP**, **FART**, or **SMOOTH RIDE**.
+Feed a cartoon buddy and predict what happens next: **BURP**, **FART**, or **SMOOTH RIDE**.
 Written in Python with [pygame-ce](https://pyga.me/). Graphics are drawn in code (no image or font
 files). Burps and farts are real recordings (public-domain CC0); the background music is composed
 by a script in this repo; other sounds are synthesized.
@@ -12,8 +12,8 @@ English and Japanese.
 
 | Platform | File | How |
 |---|---|---|
-| Windows 10/11 (64-bit) | `DigestionLab-v0.1.3.exe` | Single self-contained file. Double-click to play. |
-| Debian 12+ / Ubuntu 23.04+ (amd64) | `digestion-lab_0.1.3_amd64.deb` | `sudo apt install ./digestion-lab_0.1.3_amd64.deb`, then launch **Digestion Lab** from the app menu or run `digestion-lab`. |
+| Windows 10/11 (64-bit) | `DigestionLab-v0.1.4.exe` | Single self-contained file. Double-click to play. |
+| Debian 12+ / Ubuntu 23.04+ (amd64) | `digestion-lab_0.1.4_amd64.deb` | `sudo apt install ./digestion-lab_0.1.4_amd64.deb`, then launch **Digestion Lab** from the app menu or run `digestion-lab`. |
 
 **Checking the version**: it's shown in the window title and on the title and settings screens.
 `digestion-lab --version` prints it on Linux, `dpkg -s digestion-lab` shows the package version,
@@ -59,9 +59,22 @@ sounds are synthesized in code.
 
 ### Body
 
-A side-view wireframe of a person: face, ear, ribs, spine and arm, with the digestive tract
-inside: esophagus, a J-shaped stomach (with lining folds) that swells with gas, a coiled small
-intestine, and a large intestine with its pouch-like segments that glows green as gas builds.
+A chunky cartoon buddy seen from the side: big round head, googly eyes, rosy cheeks, round
+belly, stubby legs and red sneakers. You see the digestive tract through the belly: esophagus,
+a J-shaped stomach with its own little face, a coiled small intestine, and a lumpy large
+intestine that turns green as gas builds.
+
+Everything acts out what's happening:
+
+- **Idle:** breathes, blinks and waves at you.
+- **Eating:** chews, watches the food go down, and the esophagus bulges around each gulp.
+- **Burp:** the stomach wobbles and swells, cheeks balloon out, then the body springs up with a
+  wide-open mouth and squeezed-shut eyes.
+- **Fart:** brows tilt, mouth goes wavy, a sweat drop runs down the head and the body trembles;
+  then the fart launches it into a hop, it lands with a squash, and celebrates.
+- **Smooth ride:** happy `^^` eyes, a grin, two little bounces, and stars and hearts.
+
+Text bursts are comic-book starbursts with bouncing letters.
 
 ### Levels and music
 
@@ -128,7 +141,7 @@ digestion_lab/
   foods.py         foods, categories, line icons, EN/JA names and facts
   sim.py           digestion simulation: particles, bubbles, gas, bursts
   geometry.py      body and digestive-tract paths
-  render.py        draws the body and simulation
+  render.py        draws and animates the cartoon body and simulation
   ui.py            header, menu card, prediction panel, overlay screens
   i18n.py          English / Japanese strings
   fonts.py         system font lookup, mixed Japanese/Latin rendering
@@ -147,6 +160,14 @@ BUGS.md            fixed bugs and known issues, by version
 ## Changelog
 
 See [BUGS.md](BUGS.md) for fixed bugs and known issues.
+
+### v0.1.4
+- Cartoon body: big round head with googly eyes, eyebrows, rosy cheeks and hair; round belly,
+  stubby legs, sneakers and a waving arm; thick outlines and bright, filled organs. The stomach
+  has its own face.
+- Cartoon animation: squash and stretch, a hop when farting, happy bounces, a wobbly stomach,
+  gulps that bulge the esophagus, facial expressions for every moment, puffy fart clouds, burp
+  bubbles, stars and hearts, and comic starburst text with bouncing letters.
 
 ### v0.1.3
 - Food no longer repeats: each eaten food is replaced by one you haven't had yet (highlighted

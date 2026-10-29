@@ -230,3 +230,30 @@ class MusicTest(unittest.TestCase):
         bpms = [mm.TRACKS[f'level{i}']['bpm'] for i in range(1, 6)]
         self.assertEqual(bpms, sorted(bpms))
         self.assertEqual(len(set(bpms)), 5)
+
+
+class RenderTest(unittest.TestCase):
+    def test_cartoon_body_draws_every_phase(self):
+        import os
+        os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
+        import pygame
+        from digestion_lab.render import StageRenderer
+        from digestion_lab.sim import Sim
+        pygame.init()
+        try:
+            surf = pygame.Surface((900, 760))
+            rect = pygame.Rect(0, 0, 900, 760)
+            r, sim = StageRenderer(), Sim()
+            for cat in CATS:
+                food = next(f for f in FOODS if f.cat == cat)
+                sim.reset()
+                sim.start_run(food, 1.0)
+                for _ in range(700):   # arrive, build up, fire, land, finish
+                    sim.update(1 / 60)
+                    r.draw(surf, rect, sim, mystery=cat == 'burp')
+                    if not sim.run:
+                        break
+                self.assertIsNone(sim.run, cat)
+                self.assertTrue(0.8 < r.kx < 1.2 and 0.8 < r.ky < 1.2)
+        finally:
+            pygame.quit()

@@ -122,3 +122,64 @@ def pick_menu(foods, rng=random, per_cat=2):
         picked += rng.sample(pool, per_cat)
     rng.shuffle(picked)
     return picked
+
+
+MENU_SIZE = 6
+LEVEL_EVERY = 2
+MAX_LEVEL = 5
+
+
+def level_for(round_no):
+    """Level 1..5: a new level every LEVEL_EVERY rounds. Round 0 (before the first food) is level 1."""
+    return min(MAX_LEVEL, 1 + max(0, round_no - 1) // LEVEL_EVERY)
+
+
+class FoodDeck:
+    """Deals the menu so food doesn't repeat.
+
+    Foods come from a shuffled pile; a food only returns after the pile runs out, and never
+    within RECENT eats of being eaten. Eating a food replaces its slot with a fresh one,
+    preferring a category the menu is missing, so there is always at least one burp, one fart
+    and one smooth food to choose from.
+    """
+    RECENT = 3
+
+    def __init__(self, foods, rng=random, size=MENU_SIZE):
+        self.foods = list(foods)
+        self.rng = rng
+        self.pile = []
+        self.eaten = []
+        self.menu = []
+        for _ in range(size):
+            self.menu.append(self._draw())
+
+    def _blocked(self):
+        return {f.id for f in self.menu} | {f.id for f in self.eaten[-self.RECENT:]}
+
+    def _refill(self):
+        blocked = self._blocked()
+        self.pile = [f for f in self.foods if f.id not in blocked]
+        self.rng.shuffle(self.pile)
+
+    def _draw(self):
+        if not self.pile:
+            self._refill()
+        have = {f.cat for f in self.menu}
+        missing = [c for c in CATS if c not in have]
+        if not missing:
+            return self.pile.pop(0)
+        for i, f in enumerate(self.pile):
+            if f.cat in missing:
+                return self.pile.pop(i)
+        # The pile has none of the missing category: borrow one that isn't blocked.
+        blocked = self._blocked()
+        spare = [f for f in self.foods if f.cat in missing and f.id not in blocked]
+        return self.rng.choice(spare) if spare else self.pile.pop(0)
+
+    def eat(self, food):
+        """Mark a food eaten and refill its slot. Returns the slot index that changed."""
+        i = next(k for k, f in enumerate(self.menu) if f.id == food.id)
+        self.eaten.append(food)
+        del self.menu[i]
+        self.menu.insert(i, self._draw())
+        return i

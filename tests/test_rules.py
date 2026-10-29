@@ -166,3 +166,67 @@ class SoundAndVersionTest(unittest.TestCase):
         credits = (audio.sounds_dir() / 'CREDITS.md').read_text(encoding='utf-8')
         for name in audio.recorded_names():
             self.assertIn(f'{name}.wav', credits)
+
+
+class FoodDeckTest(unittest.TestCase):
+    def deck(self, seed):
+        from digestion_lab.rules import FoodDeck
+        return FoodDeck(FOODS, random.Random(seed))
+
+    def test_first_eight_never_repeat_and_eaten_food_stays_away(self):
+        for seed in range(40):
+            d, rng, eaten = self.deck(seed), random.Random(seed), []
+            for _ in range(40):
+                f = rng.choice(d.menu)
+                self.assertNotIn(f.id, [e for e in eaten[-3:]], f'seed {seed}: {f.id} came back too soon')
+                eaten.append(f.id)
+                d.eat(f)
+            self.assertEqual(len(set(eaten[:8])), 8, f'seed {seed}: {eaten[:8]}')
+
+    def test_classic_game_never_repeats(self):
+        for seed in range(40):
+            d, seen, rng = self.deck(seed), set(), random.Random(seed + 99)
+            for _ in range(8):
+                f = rng.choice(d.menu)
+                self.assertNotIn(f.id, seen)
+                seen.add(f.id)
+                d.eat(f)
+
+    def test_menu_stays_full_unique_and_balanced(self):
+        for seed in range(40):
+            d, rng = self.deck(seed), random.Random(seed)
+            for _ in range(60):   # long Rush/Endless game, several deck cycles
+                self.assertEqual(len(d.menu), 6)
+                self.assertEqual(len({f.id for f in d.menu}), 6)
+                self.assertEqual({f.cat for f in d.menu}, set(CATS))
+                last = rng.choice(d.menu)
+                d.eat(last)
+                self.assertNotIn(last.id, {f.id for f in d.menu}, 'eaten food came straight back')
+
+    def test_levels(self):
+        from digestion_lab.rules import level_for
+        self.assertEqual([level_for(r) for r in range(0, 12)], [1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5])
+
+
+class MusicTest(unittest.TestCase):
+    def test_title_and_every_level_have_a_loop(self):
+        import wave
+        from digestion_lab import music
+        from digestion_lab.rules import MAX_LEVEL
+        names = set(music.track_names())
+        for name in ['title'] + [f'level{i}' for i in range(1, MAX_LEVEL + 1)]:
+            self.assertIn(name, names)
+            with wave.open(str(music.music_dir() / f'{name}.wav')) as w:
+                self.assertGreater(w.getnframes() / w.getframerate(), 8)
+
+    def test_levels_get_faster(self):
+        import importlib.util, pathlib
+        spec = importlib.util.spec_from_file_location('mm', pathlib.Path('tools/make_music.py'))
+        try:
+            mm = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mm)
+        except ImportError:
+            self.skipTest('numpy not installed (only needed to compose the music)')
+        bpms = [mm.TRACKS[f'level{i}']['bpm'] for i in range(1, 6)]
+        self.assertEqual(bpms, sorted(bpms))
+        self.assertEqual(len(set(bpms)), 5)

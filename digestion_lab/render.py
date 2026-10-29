@@ -6,7 +6,8 @@ import pygame
 import pygame.gfxdraw as gfx
 
 from . import fonts
-from .geometry import (VW, VH, BODY, BACK, ARM, CHEEK, EYE, EAR, STOM_CX, STOM_CY, STOM_W, STOM_H,
+from .geometry import (VW, VH, BODY, BACK, ARM_BACK, ARM_FRONT, HAND, EAR_OUTER, EAR_INNER, EYE, EYE_SHAPE, BROW,
+                       NOSTRIL, LIPS, JAW, RIBS, SPINE, NAVEL, CHEEK, STOMACH, STOM_CX, STOM_CY,
                        P_ESO, P_SI, P_COLON, P_BYPASS, BRANCH_D)
 from .i18n import t
 from .sim import DISSOLVE
@@ -121,6 +122,30 @@ class StageRenderer:
         self.aalines(surf, color, walls[0])
         self.aalines(surf, color, walls[1])
 
+    def colon(self, surf, color, base_w, bump, fill=None):
+        """Large intestine: walls bulge in pouches (haustra) along its length."""
+        pts, cum = P_COLON.pts, P_COLON.cum
+        key = ('colon', base_w)
+        walls = self._walls.get(key)
+        if walls is None:
+            outer, inner = [], []
+            for i, (x, y) in enumerate(pts):
+                x0, y0 = pts[max(0, i - 1)]
+                x1, y1 = pts[min(len(pts) - 1, i + 1)]
+                ln = math.hypot(x1 - x0, y1 - y0) or 1.0
+                nx, ny = -(y1 - y0) / ln, (x1 - x0) / ln
+                w = base_w / 2 + bump * abs(math.sin(cum[i] / 7.5))
+                outer.append((x + nx * w, y + ny * w))
+                inner.append((x - nx * w, y - ny * w))
+            walls = (outer, inner)
+            self._walls[key] = walls
+        if fill:
+            poly = [self.P(*p) for p in walls[0] + walls[1][::-1]]
+            if len(poly) > 2:
+                gfx.filled_polygon(surf, poly, fill)
+        self.aalines(surf, color, walls[0])
+        self.aalines(surf, color, walls[1])
+
     def flow(self, surf, path, color, now, alpha):
         c = (*color, int(255 * alpha))
         d = (now * 24) % 14
@@ -200,19 +225,26 @@ class StageRenderer:
         for y in range(0, VH + 1, 40):
             pygame.draw.line(surf, gc, self.P(0, y), self.P(VW, y))
 
-        # body wireframe
-        wire_dim = mix(COL['bg'], COL['wire'], 0.78)
-        self.aalines(surf, wire_dim, BODY)
-        self.aalines(surf, wire_dim, BACK)
-        self.dashed(surf, mix(COL['bg'], COL['wire'], 0.28), ARM, 4, 5)
-        vc = mix(COL['bg'], COL['wire'], 0.6)
-        for x, y in BODY + BACK:
-            X, Y = self.Pi(x, y)
-            surf.fill(vc, (X - 1, Y - 1, 3, 3))
+        # body: smooth outline plus faint anatomy (arm, face, ribs, spine, navel)
+        wire = mix(COL['bg'], COL['wire'], 0.8)
+        faint = mix(COL['bg'], COL['wire'], 0.3)
+        self.aalines(surf, wire, BODY)
+        self.aalines(surf, wire, BACK)
+        for rib in RIBS:
+            self.aalines(surf, mix(COL['bg'], COL['wire'], 0.16), rib)
+        self.dashed(surf, mix(COL['bg'], COL['wire'], 0.22), SPINE, 2, 5)
+        for line in (ARM_BACK, ARM_FRONT):
+            self.dashed(surf, faint, line, 5, 4)
+        self.aalines(surf, faint, HAND, closed=True)
+        self.aalines(surf, wire, EAR_OUTER)
+        self.aalines(surf, faint, EAR_INNER)
+        self.aalines(surf, wire, EYE_SHAPE, closed=True)
         X, Y = self.Pi(*EYE)
-        gfx.aacircle(surf, X, Y, max(2, int(3 * s)), wire_dim)
-        ear = [(EAR[0] + 11 * math.cos(a / 10), EAR[1] + 11 * math.sin(a / 10)) for a in range(-12, 15)]
-        self.aalines(surf, wire_dim, ear)
+        gfx.filled_circle(surf, X + 1, Y, max(1, int(1.8 * s)), wire)
+        for line in (BROW, NOSTRIL, LIPS):
+            self.aalines(surf, faint, line)
+        self.aalines(surf, mix(COL['bg'], COL['wire'], 0.18), JAW)
+        self.aalines(surf, faint, NAVEL)
 
         # cheek puff: inflates over the last 0.7s before a burp, snaps back on release
         puff = 0.0
@@ -233,8 +265,8 @@ class StageRenderer:
         self.tube(surf, P_ESO, COL['wire'], 9)
         self.tube(surf, P_SI, COL['wire'], 8)
         colon_w = 10 + gas * 6
-        self.tube(surf, P_COLON, COL['fart'] if gas else COL['wire'], colon_w,
-                  fill=mix(COL['bg'], COL['fart'], 0.35 * gas) if gas else None)
+        self.colon(surf, COL['fart'] if gas else COL['wire'], colon_w, 2.2 + gas,
+                   fill=(*COL['fart'], int(90 * gas)) if gas else None)
         if cat == 'fart' and lead_d >= BRANCH_D:
             self.dashed(surf, COL['fart'], P_BYPASS.pts, 6, 6, offset=now * 30, width=max(2, int(2 * s)))
             self.label(surf, 'express', 200, 345, 293, 355, 'right')
@@ -242,39 +274,52 @@ class StageRenderer:
         self.flow(surf, P_SI, COL['wire'], now, 0.18)
         self.flow(surf, P_COLON, COL['fart'] if gas else COL['wire'], now, 0.18 + gas * 0.5)
 
-        # stomach rectangle
+        # stomach: J-shaped pouch that swells with gas
         pr = sim.pressure()
-        sc = 1 + 0.3 * pr + (math.sin(now * 30) * 0.01 if pr and not run.fired else 0)
-        sw, sh = STOM_W * sc, STOM_H * sc
-        x0, y0 = self.P(STOM_CX - sw / 2, STOM_CY - sh / 2)
-        srect = pygame.Rect(int(x0), int(y0), int(sw * s), int(sh * s))
-        surf.fill(COL['bg'], srect)
+        sc = 1 + 0.22 * pr + (math.sin(now * 30) * 0.01 if pr and not run.fired else 0)
+
+        def scaled(k):
+            return [self.P(STOM_CX + (x - STOM_CX) * k, STOM_CY + (y - STOM_CY) * k) for x, y in STOMACH]
+        outline = scaled(sc)
+        gfx.filled_polygon(surf, outline, COL['bg'])
         if cat == 'burp' and run.arrived:
-            gfx.box(surf, srect, (*COL['burp'], int(255 * (0.08 + 0.14 * pr))))
+            gfx.filled_polygon(surf, outline, (*COL['burp'], int(255 * (0.08 + 0.16 * pr))))
         if cat == 'smooth' and run.arrived:
             g = clamp01(1 - (run.t - run.tf)) if run.fired else clamp01((run.t - run.D) / 1.5)
-            gfx.box(surf, srect, (*COL['smooth'], int(255 * 0.18 * g)))
+            gfx.filled_polygon(surf, outline, (*COL['smooth'], int(255 * 0.2 * g)))
         scol = COL['burp'] if cat == 'burp' and run.arrived else COL['wire']
-        pygame.draw.rect(surf, scol, srect, max(1, int(1.8 * s)))
-        inset = max(2, int(4 * s))
-        pygame.draw.rect(surf, mix(COL['bg'], COL['wire'], 0.35), srect.inflate(-2 * inset, -2 * inset), 1)
+        pygame.draw.polygon(surf, scol, outline, max(1, int(1.4 * s)))
+        pygame.draw.aalines(surf, scol, True, outline)
+        pygame.draw.aalines(surf, mix(COL['bg'], COL['wire'], 0.3), True, scaled(sc * 0.86))   # inner lining
+        for k in range(4):   # rugae: the stomach lining's folds
+            y0 = STOM_CY - 14 + k * 10
+            fold = [(STOM_CX - 24 + j * 8, y0 + 2.5 * math.sin(j * 1.4 + k)) for j in range(6)]
+            self.aalines(surf, mix(COL['bg'], COL['wire'], 0.14),
+                         [(STOM_CX + (x - STOM_CX) * sc, STOM_CY + (y - STOM_CY) * sc) for x, y in fold])
+        xs, ys = [p[0] for p in outline], [p[1] for p in outline]
+        stom_right = (max(xs) - self.ox) / s
 
-        # bubbles, clipped to the stomach
+        # bubbles, clipped to the stomach's real shape with a mask
         if sim.bubbles:
-            surf.set_clip(srect.clip(rect))
+            box = pygame.Rect(int(min(xs)) - 2, int(min(ys)) - 2, int(max(xs) - min(xs)) + 5, int(max(ys) - min(ys)) + 5)
+            layer = pygame.Surface(box.size, pygame.SRCALPHA)
             for b in sim.bubbles:
                 a = clamp01(1 - (b['r'] - b['max']) / (b['max'] * 1.2)) if b['popping'] else 1.0
                 X, Y = self.Pi(b['x'], b['y'])
+                X, Y = X - box.x, Y - box.y
                 rr = max(1, int(b['r'] * s))
                 if not b['popping']:
-                    gfx.filled_circle(surf, X, Y, rr, (*COL['burp'], 38))
-                gfx.aacircle(surf, X, Y, rr, (*COL['burp'], int(255 * a)))
-            surf.set_clip(rect)
+                    gfx.filled_circle(layer, X, Y, rr, (*COL['burp'], 38))
+                gfx.aacircle(layer, X, Y, rr, (*COL['burp'], int(255 * a)))
+            mask = pygame.Surface(box.size, pygame.SRCALPHA)
+            gfx.filled_polygon(mask, [(x - box.x, y - box.y) for x, y in outline], (255, 255, 255, 255))
+            layer.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+            surf.blit(layer, box)
 
         self.label(surf, 'eso', 452, 232, 333, 228)
-        self.label(surf, 'stomach', 452, 362, STOM_CX + sw / 2 + 2, 362)
-        self.label(surf, 'small', 452, 484, 395, 482)
-        self.label(surf, 'large', 452, 566, 412, 545)
+        self.label(surf, 'stomach', 452, 362, stom_right + 2, 380)
+        self.label(surf, 'small', 452, 484, 392, 482)
+        self.label(surf, 'large', 452, 566, 410, 520)
 
         # food particles
         if run:

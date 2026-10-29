@@ -31,6 +31,7 @@ run wine "$WINPY" -m PyInstaller --noconfirm --clean --onefile --windowed --name
   --version-file "$(winepath -w "$ROOT_DIR/.build/version_info.txt")" \
   --icon "$(winepath -w "$ROOT_DIR/.build/icons/icon.ico")" --paths "$(winepath -w "$ROOT_DIR")" \
   --add-data "$(winepath -w "$ROOT_DIR/digestion_lab/sounds");digestion_lab/sounds" \
+  --add-data "$(winepath -w "$ROOT_DIR/digestion_lab/music");digestion_lab/music" \
   --distpath "$(winepath -w "$ROOT_DIR/dist/windows")" --workpath "$(winepath -w "$ROOT_DIR/.build/pyi-win")" \
   --specpath "$(winepath -w "$ROOT_DIR/.build")" "$(winepath -w "$ROOT_DIR/packaging/run.py")"
 echo "Built dist/windows/DigestionLab-v$VERSION.exe"

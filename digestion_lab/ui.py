@@ -214,6 +214,7 @@ def draw_header(app, surf, W):
         stats.append(('time', str(math.ceil(s.time_left))))
     else:
         stats.append(('lives', None))
+    stats.append(('level', str(app.level if s else 1)))
     stats.append(('score', str(s.score if s else 0)))
     for key, val in stats:
         lab = fonts.get(10, True).render(t(key), True, COL['muted'])
@@ -252,6 +253,15 @@ def draw_menu(app, surf, rect):
         hover = enabled and ui.hovering(r)
         rrect(surf, COL['panel2'], r, 10)
         rrect(surf, COL['wire'] if hover else COL['line'], r, 10, 1)
+        fresh = app.menu_flash and app.menu_flash[0] == i and app.clock_time - app.menu_flash[1] < 2.5
+        if fresh and app.mode == 'play':   # a new food was just dealt into this slot
+            k = 1 - (app.clock_time - app.menu_flash[1]) / 2.5
+            rrect(surf, mix(COL['panel2'], COL['fart'], k), r, 10, 2)
+            tag = fonts.get(9, True, 'en').render(t('new'), True, COL['bg'])
+            tr = pygame.Rect(0, 0, tag.get_width() + 8, 14)
+            tr.topright = (r.right - 40, r.y + 5)
+            rrect(surf, mix(COL['panel2'], COL['fart'], k), tr, 4)
+            surf.blit(tag, tag.get_rect(center=tr.center))
         fg = COL['ink'] if enabled else mix(COL['bg'], COL['ink'], 0.4)
         ic = COL['wire'] if enabled else mix(COL['bg'], COL['wire'], 0.4)
         draw_icon(surf, food, pygame.Rect(r.x + 12, r.centery - 14, 28, 28), ic)
@@ -487,7 +497,7 @@ def _screen_achievements(app, surf, W, H):
 
 def _screen_settings(app, surf, W, H):
     ui, st = app.ui, app.save['settings']
-    r = _card(surf, W, H, 500, 412)
+    r = _card(surf, W, H, 500, 468)
     text(surf, t('settings'), 22, COL['ink'], (r.centerx, r.y + 22), 'midtop', True)
     x, w, y = r.x + 24, r.w - 48, r.y + 70
 
@@ -513,6 +523,10 @@ def _screen_settings(app, surf, W, H):
     gfx.aacircle(surf, kx, slider.centery, 9, COL['ink'])
     app.slider_rect = slider
     ui.hit(slider.inflate(20, 30), 'volume_drag')
+    rr = row(t('music'))
+    on = st.get('music', True)
+    ui.button(surf, pygame.Rect(rr.right - 86, rr.centery - 15, 74, 30), t('on' if on else 'off'), 'music',
+              size=13, color=COL['fart'] if on else COL['muted'])
     rr = row(t('shakeOpt'))
     ui.button(surf, pygame.Rect(rr.right - 86, rr.centery - 15, 74, 30), t('on' if st['shake'] else 'off'), 'shake',
               size=13, color=COL['fart'] if st['shake'] else COL['muted'])

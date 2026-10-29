@@ -10,6 +10,7 @@ VERSION="$("$PY" -c 'import digestion_lab; print(digestion_lab.__version__)')"
 "$PY" packaging/make_icons.py
 "$PY" -m PyInstaller --noconfirm --clean --onefile --windowed --name digestion-lab \
   --paths "$ROOT_DIR" --add-data "$ROOT_DIR/digestion_lab/sounds:digestion_lab/sounds" \
+  --add-data "$ROOT_DIR/digestion_lab/music:digestion_lab/music" \
   --distpath "$ROOT_DIR/dist/linux" --workpath "$ROOT_DIR/.build/pyi-linux" \
   --specpath "$ROOT_DIR/.build" "$ROOT_DIR/packaging/run.py"
 

@@ -73,7 +73,7 @@ class Sim:
             wait=TIMEOUT.get(cat, 0.0) / max(1.0, speed),
             path=P_BEANS if cat == 'fart' else P_TO_STOM,
             parts=[Particle(j=(random.random() - .5) * 5, r=3 + random.random() * 2,
-                            ox=(random.random() - .5) * 56, oy=(random.random() - .5) * 34,
+                            ox=(random.random() - .5) * 44, oy=(random.random() - .5) * 26,
                             ph=random.random() * 6.28) for _ in range(N_PART)],
         )
         return self.run

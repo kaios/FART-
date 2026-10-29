@@ -20,7 +20,7 @@ SAVE_PATH = _data_dir() / 'save.json'
 def defaults():
     return {
         'settings': {'lang': None, 'volume': 0.7, 'muted': False, 'shake': True, 'difficulty': 'normal',
-                     'fullscreen': False},
+                     'fullscreen': False, 'music': True},
         'best': {'classic': 0, 'rush': 0, 'endless': 0},
         'tried': {},
         'achievements': {},

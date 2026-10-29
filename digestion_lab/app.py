@@ -8,13 +8,13 @@ import time
 from . import audio  # noqa: F401  (imported before pygame.init so the mixer can be pre-initialised)
 import pygame
 
-from . import __version__, fonts, storage, ui
+from . import __version__, fonts, music, storage, ui
 from .achievements import ACH_BY_ID, evaluate
 from .foods import FOODS
 from .i18n import set_lang, get_lang, t, L
 from .icon import make_icon
 from .render import COL, StageRenderer
-from .rules import (DIFFICULTY, begin_round, can_start_round, create_session, is_over, pick_menu, rank_index,
+from .rules import (DIFFICULTY, FoodDeck, begin_round, can_start_round, create_session, is_over, level_for, rank_index,
                     resolve, speed_for, tick)
 from .sim import Sim
 
@@ -57,6 +57,7 @@ class App:
         self.windowed_size = WINDOW_SIZE
         self._apply_display_mode()
         audio.configure(volume=st['volume'], muted=st['muted'])
+        music.configure(enabled=st.get('music', True), volume=st['volume'], muted=st['muted'])
 
         self.clock = pygame.time.Clock()
         self.ui = ui.Widgets()
@@ -66,7 +67,9 @@ class App:
         self.screen = 'title'        # overlay screen name, or None during play
         self.paused = False
         self.session = None
-        self.menu_foods = pick_menu(FOODS)
+        self.deck = FoodDeck(FOODS)
+        self.menu_flash = None       # (slot, time) of the food that was just dealt in
+        self.level = 1
         self.pred = self._empty_pred()
         self.toasts = []
         self.scroll = 0
@@ -80,6 +83,7 @@ class App:
         self.window_shake = 0.0
         self.clock_time = 0.0
         self.running = True
+        music.play('title')
 
     # ---------- display ----------
     def _apply_display_mode(self):
@@ -104,6 +108,10 @@ class App:
     @staticmethod
     def _empty_pred():
         return {'visible': False, 'progress': 1.0, 'picked': None, 'locked': False, 'result': None}
+
+    @property
+    def menu_foods(self):
+        return self.deck.menu
 
     def best_for_header(self):
         b = self.save['best']
@@ -136,7 +144,9 @@ class App:
     def start_game(self, mode):
         self.session = create_session(mode, self.save['settings']['difficulty'])
         self.sim.reset()
-        self.menu_foods = pick_menu(FOODS)
+        self.deck = FoodDeck(FOODS)
+        self.menu_flash = None
+        self.level = 1
         self.pred = self._empty_pred()
         self.screen = None
         self.mode = 'play'
@@ -145,11 +155,18 @@ class App:
         self.last_second = None
         self.save['stats']['games'] += 1
         storage.persist(self.save)
+        music.play('level1')
 
     def pick_food(self, food):
         if not self.can_pick_food() or not begin_round(self.session):
             return
         self.sim.start_run(food, speed_for(self.session))
+        self.menu_flash = (self.deck.eat(food), self.clock_time)
+        lvl = level_for(self.session.round)
+        if lvl != self.level:
+            self.level = lvl
+            self.toasts.append((t('levelUp'), f"{t('level')} {lvl}", self.clock_time))
+            music.play(f'level{lvl}')
         self.save['tried'][food.id] = True
         self.save['stats']['rounds'] += 1
         storage.persist(self.save)
@@ -217,6 +234,7 @@ class App:
         storage.persist(self.save)
         self.unlock_achievements(event='end')
         audio.play('gameover')
+        music.play('title')
         self.pred = self._empty_pred()
         self.screen = 'results'
 
@@ -228,12 +246,14 @@ class App:
         self.pred = self._empty_pred()
         self.end_at = None
         self.screen = 'title'
+        music.play('title')
 
     def set_paused(self, p):
         if self.mode != 'play' or self.paused == p:
             return
         self.paused = p
         self.screen = 'pause' if p else None
+        music.pause() if p else music.resume()
 
     # ---------- actions ----------
     def action(self, name, arg=None):
@@ -267,6 +287,11 @@ class App:
         elif name == 'sound':
             st['muted'] = not st['muted']
             audio.configure(muted=st['muted'])
+            music.configure(muted=st['muted'])
+            storage.persist(self.save)
+        elif name == 'music':
+            st['music'] = not st.get('music', True)
+            music.configure(enabled=st['music'])
             storage.persist(self.save)
         elif name == 'shake':
             st['shake'] = not st['shake']
@@ -292,6 +317,7 @@ class App:
         st['volume'] = round(max(0.0, min(1.0, (mx - r.x) / r.w)), 2)
         st['muted'] = False
         audio.configure(volume=st['volume'], muted=False)
+        music.configure(volume=st['volume'], muted=False)
 
     # ---------- input ----------
     def on_key(self, e):
@@ -309,6 +335,9 @@ class App:
             return
         if k == pygame.K_m:
             self.action('sound')
+            return
+        if k == pygame.K_n:
+            self.action('music')
             return
         if self.mode == 'results' and k in (pygame.K_RETURN, pygame.K_SPACE):
             self.action('again')
